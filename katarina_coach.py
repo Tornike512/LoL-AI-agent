@@ -371,8 +371,11 @@ def main():
 
     action_history = ActionHistory()
     last_cooldowns = {}
+    last_gold = 0
+    last_level = 1
     last_prediction_time = 0
     prediction_interval = 2.0  # Predict every 2 seconds
+    last_action_time = 0
 
     game_started = False
     predictions_started = False
@@ -402,8 +405,11 @@ def main():
                 print("     Building initial action history from gameplay...")
                 print("=" * 60)
                 game_started = True
+                last_gold = player_data["current_gold"]
+                last_level = player_data["level"]
 
             game_time = player_data["game_time"]
+            current_time = time.time()
 
             # Track ability usage by detecting cooldown changes
             # When a spell goes from ready (True) to on cooldown (False), it was used
@@ -415,7 +421,6 @@ def main():
                     # Spell was just used (went from ready to cooldown)
                     if was_ready and not is_ready:
                         spell_action = f"spell_{spell}"
-                        # Use dummy positions since we don't have real position data
                         action_history.add_action(
                             spell_action,
                             (0, 0),
@@ -423,15 +428,45 @@ def main():
                             game_time,
                             player_data["cooldowns"]
                         )
+                        last_action_time = current_time
 
-            # Update last cooldowns
+            # Detect gold spending (bought items)
+            if last_gold > 0 and player_data["current_gold"] < last_gold - 100:  # Spent significant gold
+                action_history.add_action(
+                    "buy",
+                    (0, 0),
+                    (0, 0),
+                    game_time,
+                    player_data["cooldowns"]
+                )
+                last_action_time = current_time
+
+            # Add periodic "move" or "attack" actions to keep history fresh
+            # This simulates the player doing something even when we can't detect it
+            if current_time - last_action_time > 3:  # No detected action for 3 seconds
+                # Alternate between move and attack
+                import random
+                action_type = random.choice(["move", "attack", "move"])
+                action_history.add_action(
+                    action_type,
+                    (0, 0),
+                    (0, 0),
+                    game_time,
+                    player_data["cooldowns"]
+                )
+                last_action_time = current_time
+
+            # Update last state
             last_cooldowns = player_data["cooldowns"].copy()
+            last_gold = player_data["current_gold"]
+            last_level = player_data["level"]
 
             # Make prediction periodically
-            current_time = time.time()
             if current_time - last_prediction_time >= prediction_interval:
-                # Add dummy "move" action periodically to build up history
-                if len(action_history.history) <= 5:
+                # Show initial status during warmup
+                if not predictions_started and len(action_history.history) <= 5:
+                    print(f"\r[INFO] Warming up... {len(action_history.history)}/6 actions", end="", flush=True)
+                    # Add warmup action only during initial warmup
                     action_history.add_action(
                         "move",
                         (0, 0),
@@ -439,10 +474,6 @@ def main():
                         game_time,
                         player_data["cooldowns"]
                     )
-
-                # Show initial status
-                if not predictions_started and len(action_history.history) <= 5:
-                    print(f"\r[INFO] Warming up... {len(action_history.history)}/6 actions", end="", flush=True)
 
                 if len(action_history.history) > 5:  # Need some history
                     if not predictions_started:
