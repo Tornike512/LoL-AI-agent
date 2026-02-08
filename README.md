@@ -1,6 +1,6 @@
-# LoL AI Agent - Katarina Next-Action Predictor 🔊
+# LoL AI Agent - Katarina Next-Action Predictor 🔊👁️
 
-AI-powered real-time **VOICE COACH** for League of Legends that tells you what to do while playing Katarina!
+AI-powered real-time **VOICE COACH** with **MINIMAP DETECTION** for League of Legends that tells you what to do while playing Katarina!
 
 ## 🎯 Project Overview
 
@@ -9,6 +9,7 @@ This project trains a deep learning model on 1,500+ high-level Katarina games to
 1. **Data extraction pipeline** - Downloads and processes League of Legends replay data
 2. **LSTM-based predictor** - Neural network trained on action sequences
 3. **Real-time AI voice coach** 🔊 - **SPEAKS predictions** to you during games using Riot's official API
+4. **Minimap detection** 👁️ - **SEES enemy positions** via computer vision for context-aware coaching
 
 ## 🚀 Quick Start
 
@@ -28,23 +29,29 @@ python train_katarina.py
 
 Trains an LSTM model on the extracted data. The model achieves ~55-58% validation accuracy, with 81% accuracy on buy decisions and 67% on ultimate timing.
 
-### 3. Install Voice Library
+### 3. Install Coach Dependencies
 
 ```bash
+# Voice support (required)
 pip install pyttsx3
+
+# Minimap detection (optional but highly recommended)
+pip install ultralytics pillow mss
 ```
 
-### 4. Use the AI Voice Coach 🔊
+### 4. Use the AI Voice Coach 🔊👁️
 
 ```bash
 python katarina_coach.py
 ```
 
-The coach will **SPEAK** to you in real-time:
+The coach will **SPEAK** to you in real-time with **MINIMAP AWARENESS**:
 - 🔊 "Use Q"
-- 🔊 "Use E, Shunpo"
-- 🔊 "Use ultimate"
+- 🔊 "Enemy nearby, use E, Shunpo"
+- 🔊 "Use ultimate, 2 enemies detected"
 - 🔊 "Back and buy"
+
+**The minimap detector sees enemy champions and adjusts advice accordingly!**
 
 See [COACH_README.md](COACH_README.md) for detailed usage or [VOICE_GUIDE.md](VOICE_GUIDE.md) for voice setup!
 
@@ -65,6 +72,8 @@ See [COACH_README.md](COACH_README.md) for detailed usage or [VOICE_GUIDE.md](VO
 - **HuggingFace Datasets**: Replay data source
 - **Live Client API**: Real-time game state (Riot official)
 - **pyttsx3**: Text-to-speech for voice coaching 🔊
+- **Ultralytics YOLOv11**: Minimap champion detection 👁️
+- **MSS**: Fast screen capture
 - **Python 3.x**: All scripts
 
 ## 📁 Project Structure
@@ -73,7 +82,8 @@ See [COACH_README.md](COACH_README.md) for detailed usage or [VOICE_GUIDE.md](VO
 lol-jungler-tracker/
 ├── extract_katarina.py      # Data extraction pipeline
 ├── train_katarina.py         # Model training script
-├── katarina_coach.py         # Real-time AI voice coach 🔊
+├── katarina_coach.py         # Real-time AI voice coach 🔊👁️
+├── minimap_detector.py       # Minimap champion detection module
 ├── test_api.py               # API connectivity test
 ├── test_voice.py             # Voice system test
 ├── README.md                 # This file
@@ -85,6 +95,8 @@ lol-jungler-tracker/
 
 ### Current Features
 - ✅ 🔊 **VOICE ANNOUNCEMENTS** - Coach speaks to you during gameplay!
+- ✅ 👁️ **MINIMAP DETECTION** - Sees enemy champions using YOLOv11 computer vision!
+- ✅ 🧠 **CONTEXT-AWARE PREDICTIONS** - Adjusts advice based on enemy positions
 - ✅ Real-time next-action predictions (every 2 seconds)
 - ✅ Confidence percentages for each prediction
 - ✅ Ability cooldown tracking (Q/W/E/R)
@@ -94,7 +106,7 @@ lol-jungler-tracker/
 - ✅ 100% Riot ToS compliant
 
 ### Planned Features
-- 🔄 Computer vision for enemy position detection
+- 🔄 Fine-tuned minimap model (champion-specific detection)
 - 🔄 Enemy cooldown tracking
 - 🔄 Specific item recommendations
 - 🔄 Visual overlay UI
@@ -119,9 +131,10 @@ Fully connected layers (128 → 64 → 8)
 Output: 8 action types (Q, W, E, R, move, buy, etc.)
 ```
 
-### Real-time Voice Coach
+### Real-time Voice Coach with Minimap Detection
 ```
-Live Client API → Track actions → Build sequence → Model prediction → 🔊 SPEAK + Display
+Live Client API + Minimap Screenshot → Enemy Detection (YOLO) → Track actions →
+Build sequence → LSTM prediction → 🔊 SPEAK context-aware advice + Display
 ```
 
 ## 📝 Action Types
@@ -145,7 +158,7 @@ git clone https://github.com/Tornike512/LoL-AI-agent.git
 cd LoL-AI-agent
 
 # Install dependencies
-pip install torch datasets huggingface_hub requests urllib3 pyttsx3
+pip install torch datasets huggingface_hub requests urllib3 pyttsx3 ultralytics pillow mss
 
 # Run extraction (takes ~2-3 hours)
 python extract_katarina.py

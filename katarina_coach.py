@@ -1,20 +1,22 @@
 r"""
-Katarina AI Coach - Real-time next-action predictor with VOICE
+Katarina AI Coach - Real-time next-action predictor with VOICE & MINIMAP DETECTION
 
 Connects to League of Legends Live Client API and uses the trained LSTM model
 to predict Katarina's next action in real-time during a game.
 
-NOW WITH VOICE ANNOUNCEMENTS! The coach will speak predictions to you.
+NOW WITH VOICE ANNOUNCEMENTS + MINIMAP DETECTION FOR CONTEXT-AWARE PREDICTIONS!
 
 Requirements:
 - Must be in an active League of Legends game
 - Trained model at D:\katarina_dataset\model\best_model.pt
 - Live Client API available at https://127.0.0.1:2999/liveclientdata/allgamedata
 - pyttsx3 for text-to-speech (install: pip install pyttsx3)
+- ultralytics, pillow, mss for minimap detection (optional but recommended)
 
 Usage:
-    python katarina_coach.py
-    python katarina_coach.py --no-voice  (disable voice)
+    python katarina_coach.py                 # Full features (voice + minimap)
+    python katarina_coach.py --no-voice      # Disable voice
+    python katarina_coach.py --no-minimap    # Disable minimap detection
 """
 
 import torch
@@ -35,6 +37,14 @@ try:
 except ImportError:
     TTS_AVAILABLE = False
     print("Warning: pyttsx3 not installed. Voice disabled. Install with: pip install pyttsx3")
+
+# Minimap detection (optional - enhances predictions with enemy positions)
+try:
+    from minimap_detector import MinimapDetector
+    MINIMAP_AVAILABLE = True
+except ImportError:
+    MINIMAP_AVAILABLE = False
+    print("Info: Minimap detection not available. Install with: pip install ultralytics pillow mss")
 
 # Suppress SSL warnings (Live Client API uses self-signed cert)
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -243,8 +253,8 @@ def format_prediction(action, confidence, cooldowns):
     return f"{display} ({confidence*100:.1f}% confidence)"
 
 
-def get_voice_message(action, confidence, cooldowns):
-    """Convert action to spoken message"""
+def get_voice_message(action, confidence, cooldowns, enemy_count=0):
+    """Convert action to spoken message with enemy context"""
     # Map action to voice-friendly phrases
     voice_messages = {
         "spell_Q": "Use Q",
@@ -258,6 +268,15 @@ def get_voice_message(action, confidence, cooldowns):
     }
 
     message = voice_messages.get(action, action)
+
+    # Add enemy context if available
+    if enemy_count > 0:
+        if action in ["spell_E", "move"]:
+            # Suggest caution when enemies nearby
+            message = f"Enemy nearby, {message.lower()}"
+        elif action in ["spell_R", "attack"]:
+            # Aggressive actions with enemies
+            message = f"{message}, {enemy_count} enemy detected"
 
     # Check if spell is on cooldown
     spell_map = {
@@ -324,18 +343,33 @@ class VoiceCoach:
 
 
 def main():
-    # Check for --no-voice flag
+    # Check for --no-voice and --no-minimap flags
     use_voice = "--no-voice" not in sys.argv
+    use_minimap = "--no-minimap" not in sys.argv and MINIMAP_AVAILABLE
 
     print("=" * 60)
     print("   KATARINA AI COACH - Real-time Next-Action Predictor")
     if use_voice and TTS_AVAILABLE:
         print("                    WITH VOICE")
+    if use_minimap:
+        print("                WITH MINIMAP DETECTION")
     print("=" * 60)
     print()
 
     # Initialize voice coach
     voice_coach = VoiceCoach(enabled=use_voice)
+
+    # Initialize minimap detector
+    minimap_detector = None
+    if use_minimap:
+        try:
+            print("Initializing minimap detector...")
+            minimap_detector = MinimapDetector()
+            print("[OK] Minimap detection enabled - enemy positions will enhance predictions")
+        except Exception as e:
+            print(f"[WARNING] Minimap detection failed to initialize: {e}")
+            print("[INFO] Continuing without minimap detection")
+            minimap_detector = None
 
     # Load the trained model
     print(f"Loading model from {MODEL_PATH}...")
@@ -480,6 +514,18 @@ def main():
                         print("\n[OK] AI Coach ready! Making predictions...\n")
                         predictions_started = True
 
+                    # Detect enemies on minimap if available
+                    enemy_count = 0
+                    minimap_summary = None
+                    if minimap_detector is not None:
+                        try:
+                            detections = minimap_detector.detect_champions()
+                            enemy_count = len(detections)
+                            minimap_summary = minimap_detector.get_detections_summary()
+                        except Exception as e:
+                            # Minimap detection failed, continue without it
+                            pass
+
                     action, confidence, probs = predict_next_action(model, action_history)
 
                     # Display prediction
@@ -488,8 +534,12 @@ def main():
 
                     print(f"[{timestamp}] {prediction_text}")
 
-                    # VOICE ANNOUNCEMENT - Speak the prediction
-                    voice_message = get_voice_message(action, confidence, player_data["cooldowns"])
+                    # Show minimap info if available
+                    if minimap_summary and minimap_summary['total_detected'] > 0:
+                        print(f"           Minimap: {minimap_summary['total_detected']} champions detected")
+
+                    # VOICE ANNOUNCEMENT - Speak the prediction with enemy context
+                    voice_message = get_voice_message(action, confidence, player_data["cooldowns"], enemy_count)
                     voice_coach.speak(voice_message)
 
                     # Show top 3 predictions
