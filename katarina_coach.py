@@ -177,21 +177,21 @@ def get_player_data(game_data, champion_name="Katarina"):
 
     # Extract relevant data
     abilities = active_player.get("abilities", {})
-    # Position is in player_info (from allPlayers), not active_player
-    position = player_info.get("position", {"x": 0, "z": 0})
 
     # Get cooldown states for Q, W, E, R
     cooldowns = {}
+    cooldown_remaining = {}
     for ability_key in ["Q", "W", "E", "R"]:
         ability = abilities.get(ability_key, {})
         # Ability is ready if abilityLevel > 0 and cooldown is 0
         is_ready = (ability.get("abilityLevel", 0) > 0 and
                    ability.get("cooldown", 1) == 0)
         cooldowns[ability_key] = is_ready
+        cooldown_remaining[ability_key] = ability.get("cooldown", 0)
 
     return {
-        "position": (position.get("x", 0), position.get("z", 0)),
         "cooldowns": cooldowns,
+        "cooldown_remaining": cooldown_remaining,
         "game_time": game_data.get("gameData", {}).get("gameTime", 0),
         "level": active_player.get("level", 1),
         "current_gold": active_player.get("currentGold", 0)
@@ -370,11 +370,12 @@ def main():
     print()
 
     action_history = ActionHistory()
-    last_position = None
+    last_cooldowns = {}
     last_prediction_time = 0
     prediction_interval = 2.0  # Predict every 2 seconds
 
     game_started = False
+    predictions_started = False
 
     while True:
         try:
@@ -397,38 +398,57 @@ def main():
                 continue
 
             if not game_started:
-                print("\n[OK] Game detected! Katarina AI Coach is now active.\n")
+                print("\n[OK] Game detected! Katarina AI Coach is now active.")
+                print("     Building initial action history from gameplay...")
                 print("=" * 60)
                 game_started = True
 
-            # Track movement as an action
-            current_pos = player_data["position"]
             game_time = player_data["game_time"]
 
-            # Add movement action if position changed significantly
-            if last_position:
-                distance = ((current_pos[0] - last_position[0])**2 +
-                           (current_pos[1] - last_position[1])**2)**0.5
+            # Track ability usage by detecting cooldown changes
+            # When a spell goes from ready (True) to on cooldown (False), it was used
+            if last_cooldowns:
+                for spell in ["Q", "W", "E", "R"]:
+                    was_ready = last_cooldowns.get(spell, False)
+                    is_ready = player_data["cooldowns"][spell]
 
-                if distance > 50:  # Moved significantly
-                    action_history.add_action(
-                        "move",
-                        last_position,
-                        current_pos,
-                        game_time,
-                        player_data["cooldowns"]
-                    )
+                    # Spell was just used (went from ready to cooldown)
+                    if was_ready and not is_ready:
+                        spell_action = f"spell_{spell}"
+                        # Use dummy positions since we don't have real position data
+                        action_history.add_action(
+                            spell_action,
+                            (0, 0),
+                            (0, 0),
+                            game_time,
+                            player_data["cooldowns"]
+                        )
 
-            last_position = current_pos
+            # Update last cooldowns
+            last_cooldowns = player_data["cooldowns"].copy()
 
             # Make prediction periodically
             current_time = time.time()
             if current_time - last_prediction_time >= prediction_interval:
-                # DEBUG: Show history size
+                # Add dummy "move" action periodically to build up history
                 if len(action_history.history) <= 5:
-                    print(f"\r[DEBUG] Building history... {len(action_history.history)}/6 actions", end="", flush=True)
+                    action_history.add_action(
+                        "move",
+                        (0, 0),
+                        (0, 0),
+                        game_time,
+                        player_data["cooldowns"]
+                    )
+
+                # Show initial status
+                if not predictions_started and len(action_history.history) <= 5:
+                    print(f"\r[INFO] Warming up... {len(action_history.history)}/6 actions", end="", flush=True)
 
                 if len(action_history.history) > 5:  # Need some history
+                    if not predictions_started:
+                        print("\n[OK] AI Coach ready! Making predictions...\n")
+                        predictions_started = True
+
                     action, confidence, probs = predict_next_action(model, action_history)
 
                     # Display prediction
@@ -455,7 +475,7 @@ def main():
                     # Show cooldown status
                     cd_status = []
                     for spell in ['Q', 'W', 'E', 'R']:
-                        status = "✓" if player_data["cooldowns"][spell] else "✗"
+                        status = "[READY]" if player_data["cooldowns"][spell] else f"[{player_data['cooldown_remaining'][spell]:.1f}s]"
                         cd_status.append(f"{spell}:{status}")
                     print(f"           Cooldowns: {' '.join(cd_status)} | Gold: {player_data['current_gold']}g")
                     print()
