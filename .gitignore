@@ -26,6 +26,10 @@ extraction_progress.json
 # Test files
 test_voice.py
 
+# YOLO models (large binary files)
+*.pt
+yolo*.pt
+
 # OS
 .DS_Store
 Thumbs.db
