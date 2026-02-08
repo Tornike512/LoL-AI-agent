@@ -1,10 +1,16 @@
-# Katarina AI Coach
+# Katarina AI Coach 🔊
 
-Real-time next-action predictor for League of Legends Katarina gameplay.
+Real-time next-action predictor for League of Legends Katarina gameplay **WITH VOICE ANNOUNCEMENTS**.
 
 ## What It Does
 
-The AI Coach watches your live Katarina game and predicts what action you should take next based on patterns learned from 1,500+ high-level Katarina games.
+The AI Coach watches your live Katarina game and **TELLS YOU** what action to take next with voice announcements, based on patterns learned from 1,500+ high-level Katarina games.
+
+**Features:**
+- 🔊 **VOICE COACHING** - Speaks predictions directly to you while you play!
+- 🎯 Real-time action predictions every 2 seconds
+- 📊 Confidence percentages for each suggestion
+- ⏱️ Cooldown tracking for all abilities
 
 **Predictions include:**
 - 🔪 Use Q (Bouncing Blade)
@@ -18,14 +24,16 @@ The AI Coach watches your live Katarina game and predicts what action you should
 
 1. **Trained model** at `D:\katarina_dataset\model\best_model.pt`
 2. **Active League of Legends game** (Practice Tool or real game)
-3. **Python packages**: `torch`, `requests`, `urllib3`
+3. **Python packages**: `torch`, `requests`, `urllib3`, `pyttsx3`
 
 ## Installation
 
 ```bash
-# Install required packages if not already installed
-pip install torch requests urllib3
+# Install required packages
+pip install torch requests urllib3 pyttsx3
 ```
+
+**Note**: `pyttsx3` is the text-to-speech library for voice announcements. It works offline and requires no API keys!
 
 ## Usage
 
@@ -35,11 +43,21 @@ pip install torch requests urllib3
 
 ### Step 2: Run the AI Coach
 ```bash
+# With voice (default)
 python katarina_coach.py
+
+# Without voice (text only)
+python katarina_coach.py --no-voice
 ```
 
-### Step 3: Play and watch predictions
-The coach will display real-time predictions like:
+### Step 3: Listen and follow instructions!
+The coach will **SPEAK** to you in real-time:
+- 🔊 "Use E, Shunpo"
+- 🔊 "Use ultimate"
+- 🔊 "Back and buy"
+- 🔊 "Reposition"
+
+**And display predictions on screen:**
 
 ```
 [14:23:45] ⚔️ Use E (Shunpo) (78.3% confidence)
@@ -61,16 +79,19 @@ The coach will display real-time predictions like:
 2. **Tracks your actions**: position, ability usage, cooldowns
 3. **Maintains a sliding window** of the last 32 actions
 4. **Feeds to trained LSTM model** which predicts the next action
-5. **Displays prediction** with confidence percentage every 2 seconds
+5. **SPEAKS the prediction** using text-to-speech every 2 seconds
+6. **Displays prediction** with confidence percentage on screen
 
 ## Features
 
+- ✅ 🔊 **VOICE ANNOUNCEMENTS** - Coach speaks to you in real-time!
 - ✅ Real-time predictions (updates every 2 seconds)
 - ✅ Shows confidence percentages
 - ✅ Displays alternative suggestions
 - ✅ Shows cooldown status for Q/W/E/R
-- ✅ Warns when suggesting spells on cooldown
+- ✅ Warns when suggesting spells on cooldown (voice + text)
 - ✅ Shows current gold amount
+- ✅ Non-blocking voice (predictions continue while speaking)
 - ✅ 100% safe and Riot-approved (uses official Live Client API)
 
 ## Limitations
@@ -90,6 +111,20 @@ The coach will display real-time predictions like:
   - E (Shunpo) usage: 64% accuracy
 
 ## Troubleshooting
+
+**"Warning: pyttsx3 not installed"**
+- Voice is disabled. Install with: `pip install pyttsx3`
+- Or run with `--no-voice` flag for text-only mode
+
+**Voice not working / No sound**
+- Make sure your system volume is up
+- Check that other applications can play sound
+- Try running as administrator (Windows sometimes blocks TTS)
+- Use `--no-voice` flag if voice continues to fail
+
+**Voice is too fast/slow**
+- Edit `katarina_coach.py` and change the `rate` property (line ~258)
+- Default is 175, try 150 for slower or 200 for faster
 
 **"Waiting for game to start..."**
 - Make sure you're in an active League game (not in champion select or lobby)
@@ -131,7 +166,8 @@ Built using:
 - League of Legends replay dataset: `maknee/league-of-legends-decoded-replay-packets`
 - PyTorch LSTM model
 - Riot Games Live Client API
+- pyttsx3 for text-to-speech
 
 ---
 
-**Enjoy your AI coach!** 🎮⚔️
+**Enjoy your AI voice coach!** 🎮⚔️🔊

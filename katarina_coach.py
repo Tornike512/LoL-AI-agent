@@ -1,16 +1,20 @@
 """
-Katarina AI Coach - Real-time next-action predictor
+Katarina AI Coach - Real-time next-action predictor with VOICE
 
 Connects to League of Legends Live Client API and uses the trained LSTM model
 to predict Katarina's next action in real-time during a game.
+
+NOW WITH VOICE ANNOUNCEMENTS! The coach will speak predictions to you.
 
 Requirements:
 - Must be in an active League of Legends game
 - Trained model at D:\katarina_dataset\model\best_model.pt
 - Live Client API available at https://127.0.0.1:2999/liveclientdata/allgamedata
+- pyttsx3 for text-to-speech (install: pip install pyttsx3)
 
 Usage:
     python katarina_coach.py
+    python katarina_coach.py --no-voice  (disable voice)
 """
 
 import torch
@@ -19,8 +23,18 @@ import requests
 import urllib3
 import time
 import json
+import sys
+import threading
 from collections import deque
 from datetime import datetime
+
+# Text-to-speech
+try:
+    import pyttsx3
+    TTS_AVAILABLE = True
+except ImportError:
+    TTS_AVAILABLE = False
+    print("Warning: pyttsx3 not installed. Voice disabled. Install with: pip install pyttsx3")
 
 # Suppress SSL warnings (Live Client API uses self-signed cert)
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -215,11 +229,99 @@ def format_prediction(action, confidence, cooldowns):
     return f"{display} ({confidence*100:.1f}% confidence)"
 
 
+def get_voice_message(action, confidence, cooldowns):
+    """Convert action to spoken message"""
+    # Map action to voice-friendly phrases
+    voice_messages = {
+        "spell_Q": "Use Q",
+        "spell_W": "Use W",
+        "spell_E": "Use E, Shunpo",
+        "spell_R": "Use ultimate",
+        "spell_other": "Use ability",
+        "move": "Reposition",
+        "attack": "Auto attack",
+        "buy": "Back and buy"
+    }
+
+    message = voice_messages.get(action, action)
+
+    # Check if spell is on cooldown
+    spell_map = {
+        "spell_Q": "Q",
+        "spell_W": "W",
+        "spell_E": "E",
+        "spell_R": "R"
+    }
+
+    if action in spell_map:
+        spell = spell_map[action]
+        if not cooldowns.get(spell, True):
+            message = f"{message}, but it's on cooldown"
+
+    # Add confidence for high-confidence predictions
+    if confidence > 0.75:
+        return message
+    else:
+        return f"Consider {message}"
+
+
+class VoiceCoach:
+    """Handles text-to-speech in a separate thread"""
+    def __init__(self, enabled=True):
+        self.enabled = enabled and TTS_AVAILABLE
+        self.engine = None
+        self.lock = threading.Lock()
+
+        if self.enabled:
+            try:
+                self.engine = pyttsx3.init()
+                # Set properties for better gaming experience
+                self.engine.setProperty('rate', 175)  # Speed (default 200)
+                self.engine.setProperty('volume', 0.9)  # Volume (0.0 to 1.0)
+
+                # Try to use a female voice if available (sounds less robotic)
+                voices = self.engine.getProperty('voices')
+                for voice in voices:
+                    if 'female' in voice.name.lower() or 'zira' in voice.name.lower():
+                        self.engine.setProperty('voice', voice.id)
+                        break
+
+                print("✓ Voice coach enabled")
+            except Exception as e:
+                print(f"✗ Voice initialization failed: {e}")
+                self.enabled = False
+
+    def speak(self, message):
+        """Speak a message (non-blocking)"""
+        if not self.enabled:
+            return
+
+        def _speak():
+            with self.lock:
+                try:
+                    self.engine.say(message)
+                    self.engine.runAndWait()
+                except Exception as e:
+                    print(f"Voice error: {e}")
+
+        # Run in separate thread so it doesn't block predictions
+        thread = threading.Thread(target=_speak, daemon=True)
+        thread.start()
+
+
 def main():
+    # Check for --no-voice flag
+    use_voice = "--no-voice" not in sys.argv
+
     print("=" * 60)
     print("   KATARINA AI COACH - Real-time Next-Action Predictor")
+    if use_voice and TTS_AVAILABLE:
+        print("                    🔊 WITH VOICE 🔊")
     print("=" * 60)
     print()
+
+    # Initialize voice coach
+    voice_coach = VoiceCoach(enabled=use_voice)
 
     # Load the trained model
     print(f"Loading model from {MODEL_PATH}...")
@@ -237,6 +339,8 @@ def main():
     print()
     print("Waiting for game to start...")
     print("(Make sure you're in an active League of Legends game)")
+    if use_voice:
+        print("(Voice announcements will guide you during gameplay)")
     print()
 
     action_history = ActionHistory()
@@ -302,6 +406,10 @@ def main():
                     prediction_text = format_prediction(action, confidence, player_data["cooldowns"])
 
                     print(f"[{timestamp}] {prediction_text}")
+
+                    # VOICE ANNOUNCEMENT - Speak the prediction
+                    voice_message = get_voice_message(action, confidence, player_data["cooldowns"])
+                    voice_coach.speak(voice_message)
 
                     # Show top 3 predictions
                     top3_indices = torch.topk(probs, 3).indices.tolist()
