@@ -8,9 +8,9 @@ import time
 
 try:
     import pyttsx3
-    print("✓ pyttsx3 is installed")
+    print("[OK] pyttsx3 is installed")
 except ImportError:
-    print("✗ pyttsx3 is NOT installed")
+    print("[ERROR] pyttsx3 is NOT installed")
     print("\nInstall with: pip install pyttsx3")
     sys.exit(1)
 
@@ -23,9 +23,9 @@ print()
 print("Initializing text-to-speech engine...")
 try:
     engine = pyttsx3.init()
-    print("✓ TTS engine initialized")
+    print("[OK] TTS engine initialized")
 except Exception as e:
-    print(f"✗ Failed to initialize TTS: {e}")
+    print(f"[ERROR] Failed to initialize TTS: {e}")
     sys.exit(1)
 
 # Set properties
@@ -68,7 +68,7 @@ for i, message in enumerate(test_messages, 1):
 
 print()
 print("=" * 60)
-print("✓ Voice test complete!")
+print("[SUCCESS] Voice test complete!")
 print()
 print("If you heard the announcements, voice coach is working.")
 print("If not, check:")

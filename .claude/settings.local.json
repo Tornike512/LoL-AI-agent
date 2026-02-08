@@ -24,7 +24,15 @@
       "Bash(git -C c:UsersUserDesktoplol-jungler-tracker rm --cached katarina_games.jsonl)",
       "Bash(git rm:*)",
       "Bash(git reset:*)",
-      "Bash(powershell -Command:*)"
+      "Bash(powershell -Command:*)",
+      "Read(//d/katarina_dataset/**)",
+      "Bash(timeout:*)",
+      "Bash(ping:*)",
+      "Bash(dir:*)",
+      "Bash(tasklist:*)",
+      "Bash(ls:*)",
+      "Bash(cmd.exe /c \"taskkill /PID 48880 /T & taskkill /PID 19708 /T\")",
+      "Bash(pip install:*)"
     ]
   }
 }
