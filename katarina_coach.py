@@ -384,9 +384,6 @@ def main():
 
     print()
     print("Waiting for game to start...")
-    print("(Make sure you're in an active League of Legends game)")
-    if use_voice:
-        print("(Voice announcements will guide you during gameplay)")
     print()
 
     action_history = ActionHistory()
@@ -421,9 +418,7 @@ def main():
                 continue
 
             if not game_started:
-                print("\n[OK] Game detected! Katarina AI Coach is now active.")
-                print("     Building initial action history from gameplay...")
-                print("=" * 60)
+                print("\n[OK] Game detected! Starting predictions...\n")
                 game_started = True
                 last_gold = player_data["current_gold"]
                 last_level = player_data["level"]
@@ -483,9 +478,8 @@ def main():
 
             # Make prediction periodically
             if current_time - last_prediction_time >= prediction_interval:
-                # Show initial status during warmup
+                # Warmup silently during initial warmup
                 if not predictions_started and len(action_history.history) <= 5:
-                    print(f"\r[INFO] Warming up... {len(action_history.history)}/6 actions", end="", flush=True)
                     # Add warmup action only during initial warmup
                     action_history.add_action(
                         "move",
@@ -497,7 +491,6 @@ def main():
 
                 if len(action_history.history) > 5:  # Need some history
                     if not predictions_started:
-                        print("\n[OK] AI Coach ready! Making predictions...\n")
                         predictions_started = True
 
                     # Detect enemies on minimap if available
