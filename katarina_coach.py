@@ -177,7 +177,8 @@ def get_player_data(game_data, champion_name="Katarina"):
 
     # Extract relevant data
     abilities = active_player.get("abilities", {})
-    position = active_player.get("position", {"x": 0, "z": 0})
+    # Position is in player_info (from allPlayers), not active_player
+    position = player_info.get("position", {"x": 0, "z": 0})
 
     # Get cooldown states for Q, W, E, R
     cooldowns = {}
@@ -423,6 +424,10 @@ def main():
             # Make prediction periodically
             current_time = time.time()
             if current_time - last_prediction_time >= prediction_interval:
+                # DEBUG: Show history size
+                if len(action_history.history) <= 5:
+                    print(f"\r[DEBUG] Building history... {len(action_history.history)}/6 actions", end="", flush=True)
+
                 if len(action_history.history) > 5:  # Need some history
                     action, confidence, probs = predict_next_action(model, action_history)
 
