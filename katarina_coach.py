@@ -1,10 +1,15 @@
 r"""
-Katarina AI Coach - Real-time next-action predictor with VOICE & MINIMAP DETECTION
+Katarina AI Coach - Real-time next-action predictor with VOICE & MINIMAP DETECTION & JUNGLER TRACKER
 
 Connects to League of Legends Live Client API and uses the trained LSTM model
 to predict Katarina's next action in real-time during a game.
 
-NOW WITH VOICE ANNOUNCEMENTS + MINIMAP DETECTION FOR CONTEXT-AWARE PREDICTIONS!
+NOW WITH VOICE ANNOUNCEMENTS + MINIMAP DETECTION + JUNGLER TRACKER OVERLAY!
+
+Features:
+- Voice announcements for predicted actions
+- Minimap detection for context-aware predictions
+- Jungler tracker overlay (shows if enemy jungler is visible/invisible)
 
 Requirements:
 - Must be in an active League of Legends game
@@ -14,9 +19,10 @@ Requirements:
 - ultralytics, pillow, mss for minimap detection (optional but recommended)
 
 Usage:
-    python katarina_coach.py                 # Full features (voice + minimap)
+    python katarina_coach.py                 # Full features (voice + minimap + jungler tracker)
     python katarina_coach.py --no-voice      # Disable voice
     python katarina_coach.py --no-minimap    # Disable minimap detection
+    python katarina_coach.py --no-jungler    # Disable jungler tracker overlay
 """
 
 import torch
@@ -45,6 +51,14 @@ try:
 except ImportError:
     MINIMAP_AVAILABLE = False
     print("Info: Minimap detection not available. Install with: pip install ultralytics pillow mss")
+
+# Jungler tracker (optional - shows enemy jungler visibility overlay)
+try:
+    from jungler_tracker import JunglerTracker
+    JUNGLER_TRACKER_AVAILABLE = True
+except ImportError:
+    JUNGLER_TRACKER_AVAILABLE = False
+    print("Info: Jungler tracker not available.")
 
 # Suppress SSL warnings (Live Client API uses self-signed cert)
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -343,9 +357,10 @@ class VoiceCoach:
 
 
 def main():
-    # Check for --no-voice and --no-minimap flags
+    # Check for --no-voice, --no-minimap, and --no-jungler flags
     use_voice = "--no-voice" not in sys.argv
     use_minimap = "--no-minimap" not in sys.argv and MINIMAP_AVAILABLE
+    use_jungler_tracker = "--no-jungler" not in sys.argv and JUNGLER_TRACKER_AVAILABLE
 
     print("=" * 60)
     print("   KATARINA AI COACH - Real-time Next-Action Predictor")
@@ -353,6 +368,8 @@ def main():
         print("                    WITH VOICE")
     if use_minimap:
         print("                WITH MINIMAP DETECTION")
+    if use_jungler_tracker:
+        print("               WITH JUNGLER TRACKER")
     print("=" * 60)
     print()
 
@@ -370,6 +387,18 @@ def main():
             print(f"[WARNING] Minimap detection failed to initialize: {e}")
             print("[INFO] Continuing without minimap detection")
             minimap_detector = None
+
+    # Initialize jungler tracker
+    jungler_tracker = None
+    if use_jungler_tracker:
+        try:
+            print("Initializing jungler tracker overlay...")
+            jungler_tracker = JunglerTracker()
+            print("[OK] Jungler tracker overlay enabled - check top-left corner")
+        except Exception as e:
+            print(f"[WARNING] Jungler tracker failed to initialize: {e}")
+            print("[INFO] Continuing without jungler tracker")
+            jungler_tracker = None
 
     # Load the trained model
     print(f"Loading model from {MODEL_PATH}...")
@@ -517,13 +546,22 @@ def main():
                     # Detect enemies on minimap if available
                     enemy_count = 0
                     minimap_summary = None
+                    minimap_detections = []
                     if minimap_detector is not None:
                         try:
-                            detections = minimap_detector.detect_champions()
-                            enemy_count = len(detections)
+                            minimap_detections = minimap_detector.detect_champions()
+                            enemy_count = len(minimap_detections)
                             minimap_summary = minimap_detector.get_detections_summary()
                         except Exception as e:
                             # Minimap detection failed, continue without it
+                            pass
+
+                    # Update jungler tracker if available
+                    if jungler_tracker is not None:
+                        try:
+                            jungler_tracker.update(minimap_detections)
+                        except Exception as e:
+                            # Jungler tracker failed, continue without it
                             pass
 
                     action, confidence, probs = predict_next_action(model, action_history)
@@ -571,6 +609,13 @@ def main():
         except Exception as e:
             print(f"\n[!] Error: {e}")
             time.sleep(2)
+
+    # Cleanup
+    if jungler_tracker is not None:
+        try:
+            jungler_tracker.close()
+        except:
+            pass
 
 
 if __name__ == "__main__":
