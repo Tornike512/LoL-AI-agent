@@ -155,11 +155,24 @@ def get_player_data(game_data, champion_name="Katarina"):
     if not game_data:
         return None
 
-    # Find the active player (should be Katarina)
+    # Find the active player
     active_player = game_data.get("activePlayer", {})
+    all_players = game_data.get("allPlayers", [])
 
-    # Verify we're playing Katarina
-    if active_player.get("championStats", {}).get("championName") != champion_name:
+    # Verify we're playing Katarina by checking allPlayers
+    summoner_name = active_player.get("summonerName", "")
+    player_info = None
+    for player in all_players:
+        if player.get("summonerName") == summoner_name:
+            player_info = player
+            break
+
+    if not player_info:
+        return None
+
+    # Check champion name (can be "Katarina" or "game_character_displayname_Katarina")
+    champ = player_info.get("rawChampionName", player_info.get("championName", ""))
+    if champion_name.lower() not in champ.lower():
         return None
 
     # Extract relevant data
