@@ -1,6 +1,6 @@
-# LoL AI Agent - Katarina Next-Action Predictor
+# LoL AI Agent - Katarina Next-Action Predictor 🔊
 
-AI-powered real-time coach for League of Legends that predicts optimal next actions for Katarina gameplay.
+AI-powered real-time **VOICE COACH** for League of Legends that tells you what to do while playing Katarina!
 
 ## 🎯 Project Overview
 
@@ -8,7 +8,7 @@ This project trains a deep learning model on 1,500+ high-level Katarina games to
 
 1. **Data extraction pipeline** - Downloads and processes League of Legends replay data
 2. **LSTM-based predictor** - Neural network trained on action sequences
-3. **Real-time AI coach** - Live predictions during your games using Riot's official API
+3. **Real-time AI voice coach** 🔊 - **SPEAKS predictions** to you during games using Riot's official API
 
 ## 🚀 Quick Start
 
@@ -28,15 +28,25 @@ python train_katarina.py
 
 Trains an LSTM model on the extracted data. The model achieves ~55-58% validation accuracy, with 81% accuracy on buy decisions and 67% on ultimate timing.
 
-### 3. Use the AI Coach
+### 3. Install Voice Library
+
+```bash
+pip install pyttsx3
+```
+
+### 4. Use the AI Voice Coach 🔊
 
 ```bash
 python katarina_coach.py
 ```
 
-Connects to your live League game and provides real-time action predictions!
+The coach will **SPEAK** to you in real-time:
+- 🔊 "Use Q"
+- 🔊 "Use E, Shunpo"
+- 🔊 "Use ultimate"
+- 🔊 "Back and buy"
 
-See [COACH_README.md](COACH_README.md) for detailed usage instructions.
+See [COACH_README.md](COACH_README.md) for detailed usage or [VOICE_GUIDE.md](VOICE_GUIDE.md) for voice setup!
 
 ## 📊 Model Performance
 
@@ -54,6 +64,7 @@ See [COACH_README.md](COACH_README.md) for detailed usage instructions.
 - **PyTorch**: LSTM neural network
 - **HuggingFace Datasets**: Replay data source
 - **Live Client API**: Real-time game state (Riot official)
+- **pyttsx3**: Text-to-speech for voice coaching 🔊
 - **Python 3.x**: All scripts
 
 ## 📁 Project Structure
@@ -62,20 +73,24 @@ See [COACH_README.md](COACH_README.md) for detailed usage instructions.
 lol-jungler-tracker/
 ├── extract_katarina.py      # Data extraction pipeline
 ├── train_katarina.py         # Model training script
-├── katarina_coach.py         # Real-time AI coach
+├── katarina_coach.py         # Real-time AI voice coach 🔊
 ├── test_api.py               # API connectivity test
+├── test_voice.py             # Voice system test
+├── README.md                 # This file
 ├── COACH_README.md           # Detailed coach documentation
-└── README.md                 # This file
+└── VOICE_GUIDE.md            # Voice setup guide
 ```
 
 ## 🎮 Features
 
 ### Current Features
-- ✅ Real-time next-action predictions
+- ✅ 🔊 **VOICE ANNOUNCEMENTS** - Coach speaks to you during gameplay!
+- ✅ Real-time next-action predictions (every 2 seconds)
 - ✅ Confidence percentages for each prediction
 - ✅ Ability cooldown tracking (Q/W/E/R)
 - ✅ Alternative action suggestions
 - ✅ Gold and level monitoring
+- ✅ Non-blocking voice (predictions continue while speaking)
 - ✅ 100% Riot ToS compliant
 
 ### Planned Features
@@ -104,9 +119,9 @@ Fully connected layers (128 → 64 → 8)
 Output: 8 action types (Q, W, E, R, move, buy, etc.)
 ```
 
-### Real-time Coach
+### Real-time Voice Coach
 ```
-Live Client API → Track actions → Build sequence → Model prediction → Display
+Live Client API → Track actions → Build sequence → Model prediction → 🔊 SPEAK + Display
 ```
 
 ## 📝 Action Types
@@ -130,7 +145,7 @@ git clone https://github.com/Tornike512/LoL-AI-agent.git
 cd LoL-AI-agent
 
 # Install dependencies
-pip install torch datasets huggingface_hub requests urllib3
+pip install torch datasets huggingface_hub requests urllib3 pyttsx3
 
 # Run extraction (takes ~2-3 hours)
 python extract_katarina.py
@@ -138,19 +153,23 @@ python extract_katarina.py
 # Train the model (takes several hours on CPU)
 python train_katarina.py
 
+# Test voice system
+python test_voice.py
+
 # Test API connectivity (requires active game)
 python test_api.py
 
-# Run the AI coach (requires active game)
+# Run the AI voice coach (requires active game)
 python katarina_coach.py
 ```
 
 ## 🎯 Use Cases
 
-- **Learning Katarina**: See what high-level players typically do in similar situations
-- **Combo timing**: Learn when to engage with E-Q-W-R combos
-- **Back timing**: Model predicts optimal times to recall and buy
-- **Replay analysis**: Understand decision patterns
+- **Real-time voice coaching**: 🔊 Hear what to do while keeping eyes on the game
+- **Learning Katarina**: Internalize high-level decision patterns through repetition
+- **Combo timing**: Voice guides you through E-Q-W-R combos in real-time
+- **Back timing**: Audio alerts when it's optimal to recall and buy
+- **Hands-free coaching**: No need to look at terminal or second monitor
 - **Research**: Experiment with AI for League of Legends gameplay
 
 ## ⚖️ Legal & ToS
@@ -183,10 +202,13 @@ MIT License - See LICENSE file for details
 - **Dataset**: [maknee/league-of-legends-decoded-replay-packets](https://huggingface.co/datasets/maknee/league-of-legends-decoded-replay-packets)
 - **Riot Games**: For the Live Client API
 - **PyTorch**: Deep learning framework
+- **pyttsx3**: Text-to-speech library
 - **HuggingFace**: Dataset hosting
 
 ---
 
-**Built with Claude Code** 🤖⚔️
+**Built with Claude Code** 🤖⚔️🔊
 
-For detailed AI coach usage, see [COACH_README.md](COACH_README.md)
+📖 **Documentation:**
+- [COACH_README.md](COACH_README.md) - Detailed coach usage
+- [VOICE_GUIDE.md](VOICE_GUIDE.md) - Voice setup and customization
