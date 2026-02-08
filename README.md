@@ -1,6 +1,6 @@
-# LoL AI Agent - Katarina Next-Action Predictor 🔊👁️
+# LoL AI Agent - Katarina Next-Action Predictor 🔊👁️🌲
 
-AI-powered real-time **VOICE COACH** with **MINIMAP DETECTION** for League of Legends that tells you what to do while playing Katarina!
+AI-powered real-time **VOICE COACH** with **MINIMAP DETECTION** and **JUNGLER TRACKER** for League of Legends that tells you what to do while playing Katarina!
 
 ## 🎯 Project Overview
 
@@ -10,6 +10,7 @@ This project trains a deep learning model on 1,500+ high-level Katarina games to
 2. **LSTM-based predictor** - Neural network trained on action sequences
 3. **Real-time AI voice coach** 🔊 - **SPEAKS predictions** to you during games using Riot's official API
 4. **Minimap detection** 👁️ - **SEES enemy positions** via computer vision for context-aware coaching
+5. **Jungler tracker** 🌲 - **TRACKS enemy jungler visibility** with always-on-top overlay
 
 ## 🚀 Quick Start
 
@@ -39,21 +40,23 @@ pip install pyttsx3
 pip install ultralytics pillow mss
 ```
 
-### 4. Use the AI Voice Coach 🔊👁️
+### 4. Use the AI Voice Coach 🔊👁️🌲
 
 ```bash
 python katarina_coach.py
 ```
 
-The coach will **SPEAK** to you in real-time with **MINIMAP AWARENESS**:
+The coach will **SPEAK** to you in real-time with **MINIMAP AWARENESS** and **JUNGLER TRACKING**:
 - 🔊 "Use Q"
 - 🔊 "Enemy nearby, use E, Shunpo"
 - 🔊 "Use ultimate, 2 enemies detected"
 - 🔊 "Back and buy"
+- 🌲 **Overlay shows if enemy jungler is VISIBLE (green) or INVISIBLE (red)**
 
 **The minimap detector sees enemy champions and adjusts advice accordingly!**
+**The jungler tracker shows real-time jungler visibility in top-left corner!**
 
-See [COACH_README.md](COACH_README.md) for detailed usage or [VOICE_GUIDE.md](VOICE_GUIDE.md) for voice setup!
+See [COACH_README.md](COACH_README.md) for detailed usage, [VOICE_GUIDE.md](VOICE_GUIDE.md) for voice setup, or [JUNGLER_TRACKER_GUIDE.md](JUNGLER_TRACKER_GUIDE.md) for jungler tracker!
 
 ## 📊 Model Performance
 
@@ -80,15 +83,18 @@ See [COACH_README.md](COACH_README.md) for detailed usage or [VOICE_GUIDE.md](VO
 
 ```
 lol-jungler-tracker/
-├── extract_katarina.py      # Data extraction pipeline
-├── train_katarina.py         # Model training script
-├── katarina_coach.py         # Real-time AI voice coach 🔊👁️
-├── minimap_detector.py       # Minimap champion detection module
-├── test_api.py               # API connectivity test
-├── test_voice.py             # Voice system test
-├── README.md                 # This file
-├── COACH_README.md           # Detailed coach documentation
-└── VOICE_GUIDE.md            # Voice setup guide
+├── extract_katarina.py         # Data extraction pipeline
+├── train_katarina.py           # Model training script
+├── katarina_coach.py           # Real-time AI voice coach 🔊👁️🌲
+├── minimap_detector.py         # Minimap champion detection module
+├── jungler_tracker.py          # Enemy jungler visibility tracker
+├── test_api.py                 # API connectivity test
+├── test_voice.py               # Voice system test
+├── README.md                   # This file
+├── COACH_README.md             # Detailed coach documentation
+├── VOICE_GUIDE.md              # Voice setup guide
+├── MINIMAP_SETUP.md            # Minimap detection guide
+└── JUNGLER_TRACKER_GUIDE.md    # Jungler tracker guide
 ```
 
 ## 🎮 Features
@@ -96,6 +102,7 @@ lol-jungler-tracker/
 ### Current Features
 - ✅ 🔊 **VOICE ANNOUNCEMENTS** - Coach speaks to you during gameplay!
 - ✅ 👁️ **MINIMAP DETECTION** - Sees enemy champions using YOLOv11 computer vision!
+- ✅ 🌲 **JUNGLER TRACKER** - Shows if enemy jungler is visible/invisible with color-coded overlay!
 - ✅ 🧠 **CONTEXT-AWARE PREDICTIONS** - Adjusts advice based on enemy positions
 - ✅ Real-time next-action predictions (every 2 seconds)
 - ✅ Confidence percentages for each prediction
