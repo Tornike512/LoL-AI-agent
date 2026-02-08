@@ -1,4 +1,4 @@
-"""
+r"""
 Katarina AI Coach - Real-time next-action predictor with VOICE
 
 Connects to League of Legends Live Client API and uses the trained LSTM model
@@ -286,9 +286,9 @@ class VoiceCoach:
                         self.engine.setProperty('voice', voice.id)
                         break
 
-                print("✓ Voice coach enabled")
+                print("[OK] Voice coach enabled")
             except Exception as e:
-                print(f"✗ Voice initialization failed: {e}")
+                print(f"[ERROR] Voice initialization failed: {e}")
                 self.enabled = False
 
     def speak(self, message):
@@ -316,7 +316,7 @@ def main():
     print("=" * 60)
     print("   KATARINA AI COACH - Real-time Next-Action Predictor")
     if use_voice and TTS_AVAILABLE:
-        print("                    🔊 WITH VOICE 🔊")
+        print("                    WITH VOICE")
     print("=" * 60)
     print()
 
@@ -328,12 +328,24 @@ def main():
     try:
         model = KatarinaPredictor()
         checkpoint = torch.load(MODEL_PATH, map_location='cpu', weights_only=False)
-        model.load_state_dict(checkpoint['model_state_dict'])
+
+        # Handle both checkpoint formats
+        if 'model_state_dict' in checkpoint:
+            model.load_state_dict(checkpoint['model_state_dict'])
+            val_acc = checkpoint.get('best_val_acc', 0)
+        elif 'model_state' in checkpoint:
+            model.load_state_dict(checkpoint['model_state'])
+            val_acc = checkpoint.get('val_acc', 0)
+        else:
+            # Assume checkpoint is just the model state
+            model.load_state_dict(checkpoint)
+            val_acc = 0
+
         model.eval()
-        print(f"✓ Model loaded successfully (Epoch {checkpoint.get('epoch', '?')})")
-        print(f"  Best validation accuracy: {checkpoint.get('best_val_acc', 0)*100:.1f}%")
+        print(f"[OK] Model loaded successfully (Epoch {checkpoint.get('epoch', '?')})")
+        print(f"  Validation accuracy: {val_acc*100:.1f}%")
     except Exception as e:
-        print(f"✗ Failed to load model: {e}")
+        print(f"[ERROR] Failed to load model: {e}")
         return
 
     print()
@@ -371,7 +383,7 @@ def main():
                 continue
 
             if not game_started:
-                print("\n✓ Game detected! Katarina AI Coach is now active.\n")
+                print("\n[OK] Game detected! Katarina AI Coach is now active.\n")
                 print("=" * 60)
                 game_started = True
 
