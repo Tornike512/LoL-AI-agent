@@ -44,7 +44,9 @@ class MinimapDetector:
         if use_pretrained:
             print("[INFO] Loading YOLO11n model for minimap detection...")
             self.model = YOLO('yolo11n.pt')  # Lightweight nano model
-            print("[OK] Model loaded")
+            # Force CPU to avoid CUDA compatibility issues
+            self.model.to('cpu')
+            print("[OK] Model loaded (CPU mode)")
         else:
             self.model = None
             print("[WARNING] No model loaded - detection disabled")
