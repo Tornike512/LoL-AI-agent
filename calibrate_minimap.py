@@ -5,6 +5,8 @@ Shows exactly where the minimap detector is capturing by drawing a red rectangle
 on your screen. Adjust the coordinates in minimap_detector.py if needed.
 """
 
+import utils.transport
+import utils.session
 import mss
 import cv2
 import numpy as np
